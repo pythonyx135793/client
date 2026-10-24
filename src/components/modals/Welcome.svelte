@@ -16,8 +16,18 @@
 
 	onMount(() => {
 		const previousFocus = document.activeElement;
+		// Native dialog tabbing may reach browser chrome/body. Handle Escape before
+		// the app's global modal shortcut so every dismissal is remembered.
+		const onKeydown = (event) => {
+			if (event.key != 'Escape' || !dialog.open) return;
+			event.preventDefault();
+			event.stopPropagation();
+			dismiss();
+		};
+		window.addEventListener('keydown', onKeydown, true);
 		dialog.showModal();
 		return () => {
+			window.removeEventListener('keydown', onKeydown, true);
 			dialog.close();
 			const target = previousFocus?.isConnected && previousFocus != document.body
 				? previousFocus : document.querySelector('[data-welcome-trigger]');
